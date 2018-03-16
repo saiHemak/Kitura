@@ -360,6 +360,94 @@ public class RouterResponse {
         return send(renderedResource)
     }
 
+    /// Render a resource using Router's template engine.
+    ///
+    /// - Parameter resource: the resource name without extension.
+    /// - Parameter context: one or many Encodable objects.
+    /// - Parameter options: rendering options, specific per template engine
+    /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
+    /// - Returns: this RouterResponse.
+    @discardableResult
+    public func render<T: Encodable>(_ resource: String, object: T..., nameOfType: String = "", options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+        return try render(resource, objects: object, options: options)
+    }
+    
+    /// Render a resource using Router's template engine.
+    ///
+    /// - Parameter resource: the resource name without extension.
+    /// - Parameter context: an array of Encodable objects.
+    /// - Parameter options: rendering options, specific per template engine
+    /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
+    /// - Returns: this RouterResponse.
+    @discardableResult
+    public func render<T: Encodable>(_ resource: String, objects: [T], nameOfType: String = "", options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+        guard let router = getRouterThatCanRender(resource: resource) else {
+            throw TemplatingError.noTemplateEngineForExtension(extension: "")
+        }
+        var key = String()
+        if nameOfType != "" {
+            key = nameOfType
+        } else {
+            key = String(describing: T.self).lowercased()
+            if key.suffix(1) != "s" {
+                key = key + "s"
+            }
+        }
+        var values: [String: [[String: Any]]] = [:]
+        try objects.forEach { item in
+            guard let data = try? JSONEncoder().encode(item) else {
+                Log.error("Unable to encode \(item)")
+                return
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] else {
+                Log.error("Unable to serialise \(data) as [String: Any]")
+                return
+            }
+            if values[key] != nil {
+                values[key]?.append(json)
+            } else {
+                values[key] = [json]
+            }
+        }
+        let renderedResource = try router.render(template: resource, context: values, options: options)
+        return send(renderedResource)
+    }
+    
+    /// Render a resource using Router's template engine.
+    ///
+    /// - Parameter resource: the resource name without extension.
+    /// - Parameter context: a dictionary of local variables of the resource to an array of Encodable objects.
+    /// - Parameter options: rendering options, specific per template engine
+    /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
+    /// - Returns: this RouterResponse.
+    @discardableResult
+    public func render<T: Encodable>(_ resource: String, context: [String: [T]], options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+        guard let router = getRouterThatCanRender(resource: resource) else {
+            throw TemplatingError.noTemplateEngineForExtension(extension: "")
+        }
+        let keys = Array(context.keys)
+        var values: [String: [[String: Any]]] = [:]
+        for key in keys {
+            try context[key]?.forEach { item in
+                guard let data = try? JSONEncoder().encode(item) else {
+                    Log.error("Unable to encode \(item)")
+                    return
+                }
+                guard let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] else {
+                    Log.error("Unable to serialise \(data) as [String: Any]")
+                    return
+                }
+                if values[key] != nil {
+                    values[key]?.append(json)
+                } else {
+                    values[key] = [json]
+                }
+            }
+        }
+        let renderedResource = try router.render(template: resource, context: values, options: options)
+        return send(renderedResource)
+    }
+    
     private func getRouterThatCanRender(resource: String) -> Router? {
         var routerStackToTraverse = routerStack
 
