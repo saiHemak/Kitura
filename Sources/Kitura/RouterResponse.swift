@@ -18,6 +18,7 @@ import KituraNet
 import KituraTemplateEngine
 import LoggerAPI
 import Foundation
+import KituraContracts
 
 
 // MARK: RouterResponse
@@ -368,8 +369,33 @@ public class RouterResponse {
     /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
     /// - Returns: this RouterResponse.
     @discardableResult
-    public func render<T: Encodable>(_ resource: String, object: T..., nameOfType: String = "", options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
-        return try render(resource, objects: object, options: options)
+    public func render<T: Encodable>(_ resource: String, object: T, nameOfType: String = "", options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+        guard let router = getRouterThatCanRender(resource: resource) else {
+            throw TemplatingError.noTemplateEngineForExtension(extension: "")
+        }
+        
+        var key = String()
+        if nameOfType != "" {
+            key = nameOfType
+        } else {
+            key = String(describing: T.self).lowercased()
+            if key.suffix(1) != "s" {
+                key = key + "s"
+            }
+        }
+        guard let data = try? JSONEncoder().encode(object) else {
+            Log.error("Unable to encode \(object)")
+            return self
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] else {
+            Log.error("Unable to serialise \(data) as [String: Any]")
+            return self
+        }
+        
+        let value: [String: [String: Any]] = [key: json]
+        
+        let renderedResource = try router.render(template: resource, context: value, options: options)
+        return send(renderedResource)
     }
     
     /// Render a resource using Router's template engine.
@@ -443,6 +469,42 @@ public class RouterResponse {
                     values[key] = [json]
                 }
             }
+        }
+        let renderedResource = try router.render(template: resource, context: values, options: options)
+        return send(renderedResource)
+    }
+    
+    @discardableResult
+    public func render<T: Encodable, I: Identifier>(_ resource: String, objects: [(I, T)], nameOfType: String = "", options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+        guard let router = getRouterThatCanRender(resource: resource) else {
+            throw TemplatingError.noTemplateEngineForExtension(extension: "")
+        }
+        var key = String()
+        if nameOfType != "" {
+            key = nameOfType
+        } else {
+            key = String(describing: T.self).lowercased()
+            if key.suffix(1) != "s" {
+                key = key + "s"
+            }
+        }
+        var values: [String: [[String: Any]]] = [:]
+        
+        try objects.forEach { item in
+            guard let data = try? JSONEncoder().encode(item.1) else {
+                Log.error("Unable to encode \(item.1)")
+                return
+            }
+            guard let json = try JSONSerialization.jsonObject(with: data, options: .allowFragments) as? [String: Any] else {
+                Log.error("Unable to serialise \(data) as [String: Any]")
+                return
+            }
+            if values[key] != nil {
+                values[key]?.append(json)
+            } else {
+                values[key] = [json]
+            }
+            
         }
         let renderedResource = try router.render(template: resource, context: values, options: options)
         return send(renderedResource)
