@@ -370,7 +370,7 @@ public class RouterResponse {
     /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
     /// - Returns: this RouterResponse.
     @discardableResult
-    public func render<T: Encodable>(_ resource: String, using value: T, for key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+    public func render<T: Encodable>(_ resource: String, using value: T, forKey key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
         guard let router = getRouterThatCanRender(resource: resource) else {
             throw TemplatingError.noTemplateEngineForExtension(extension: "")
         }
@@ -401,7 +401,7 @@ public class RouterResponse {
     /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
     /// - Returns: this RouterResponse.
     @discardableResult
-    public func render<T: Encodable>(_ resource: String, using values: [T], for key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+    public func render<T: Encodable>(_ resource: String, using values: [T], forKey key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
         guard let router = getRouterThatCanRender(resource: resource) else {
             throw TemplatingError.noTemplateEngineForExtension(extension: "")
         }
@@ -472,7 +472,7 @@ public class RouterResponse {
     /// - Throws: TemplatingError if no file extension was specified or there is no template engine defined for the extension.
     /// - Returns: this RouterResponse.
     @discardableResult
-    public func render<T: Encodable, I: Identifier>(_ resource: String, using values: [(I, T)], for key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
+    public func render<T: Encodable, I: Identifier>(_ resource: String, using values: [(I, T)], forKey key: String? = nil, options: RenderingOptions = NullRenderingOptions()) throws -> RouterResponse {
         guard let router = getRouterThatCanRender(resource: resource) else {
             throw TemplatingError.noTemplateEngineForExtension(extension: "")
         }
