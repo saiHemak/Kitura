@@ -383,10 +383,12 @@ public class RouterResponse {
             Log.error("Unable to serialise \(data) as [String: Any]")
             return self
         }
-        
-        let contextKey = key ?? String(describing: T.self).lowercased()
-        
-        let context: [String: [String: Any]] = [contextKey: json]
+        var context: [String: Any] = [:]
+        if let contextKey = key {
+            context = [contextKey: json]
+        } else {
+            context = json
+        }
         
         let renderedResource = try router.render(template: resource, context: context, options: options)
         return send(renderedResource)
