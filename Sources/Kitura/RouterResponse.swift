@@ -385,7 +385,7 @@ public class RouterResponse {
         }
         var context: [String: Any] = [:]
         if let contextKey = key {
-            context = [contextKey: json]
+            context = [contextKey: [json]]
         } else {
             context = json
         }
