@@ -406,7 +406,7 @@ public class RouterResponse {
             throw TemplatingError.noTemplateEngineForExtension(extension: "")
         }
 
-        let contextKey = key ?? String(describing: T.self).lowercased()
+        let contextKey = key ?? String(describing: T.self).lowercased() + "s"
         
         var context: [String: [[String: Any]]] = [:]
         try values.forEach { item in
@@ -477,7 +477,7 @@ public class RouterResponse {
             throw TemplatingError.noTemplateEngineForExtension(extension: "")
         }
 
-        let contextKey = key ?? String(describing: T.self).lowercased()
+        let contextKey = key ?? String(describing: T.self).lowercased() + "s"
         
         var context: [String: [[String: Any]]] = [:]
         
