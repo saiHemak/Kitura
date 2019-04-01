@@ -36,6 +36,7 @@ let package = Package(
         )
     ],
     dependencies: [
+	.package(url: "https://github.com/saiHemak/BlueSSLService.git", from: "1.0.0"),
         kituraNetPackage,
         .package(url: "https://github.com/IBM-Swift/Kitura-TemplateEngine.git", from: "2.0.0"),
         .package(url: "https://github.com/IBM-Swift/KituraContracts.git", from: "1.0.0"),
@@ -44,7 +45,7 @@ let package = Package(
     targets: [
         .target(
             name: "Kitura",
-            dependencies: ["KituraNet", "KituraTemplateEngine", "KituraContracts", "TypeDecoder"]
+            dependencies: ["SSLService","KituraNet", "KituraTemplateEngine", "KituraContracts", "TypeDecoder"]
         ),
         .testTarget(
             name: "KituraTests",
